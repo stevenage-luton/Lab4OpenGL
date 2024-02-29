@@ -2,17 +2,17 @@
 
 in vec3 Position;
 in vec3 Normal;
+in vec2 TexCoord;
+
+layout (binding = 0) uniform sampler2D Texture;
 layout (location = 0) out vec4 FragColor;
 
-uniform struct SpotLightInfo{
-    vec3 Position;
+uniform struct LightInfo{
+    vec4 Position;
     vec3 La; //Ambient
     vec3 L; //Diffuse & Specular
-    vec3 Direction;
-    float Exponent;
-    float Cutoff;
 
-}Spot;
+}Light;
 
 uniform struct MaterialInfo{
     vec3 Kd;
@@ -22,42 +22,50 @@ uniform struct MaterialInfo{
 
 }Material;
 
+uniform struct FogInfo{
+    float MaxDistance;
+    float MinDistance;
+    vec3 Colour;
 
-vec3 blinnPhongSpot(vec3 position, vec3 normal){
+}Fog;
+
+
+vec3 blinnPhong(vec3 position, vec3 normal){
+    //Variables
     vec3 diffuse = vec3(0), specular = vec3(0);
+    vec3 texColour = texture(Texture,TexCoord).rgb;
 
     //Ambient Light
-    vec3 ambient = Spot.La*Material.Ka;
+    vec3 ambient = Light.La*texColour;
 
     //Diffuse
-    vec3 lightToVertex = normalize(Spot.Position - position);
+    vec3 lightToVertex = normalize(Light.Position.xyz - position);
 
-    float cosAng = dot(-lightToVertex,normalize(Spot.Direction));
-    float angle = acos(cosAng);
+    float dotProduct = max(dot(lightToVertex, normal),0.0);
+    diffuse = texColour*dotProduct;
 
-    float spotScale;
-
-    if (angle>=0.0&&angle<Spot.Cutoff){
-        spotScale = pow(cosAng, Spot.Exponent);
-        float dotProduct = max(dot(lightToVertex, normal),0.0);
-        diffuse = Material.Kd*dotProduct;
-
-        if (dotProduct > 0.0){
-            vec3 v = normalize(-position.xyz);
-            vec3 h = normalize(v + lightToVertex);
-            specular = Material.Ks*pow(max(dot(h,normal),0.0),Material.Shininess);
+    if (dotProduct > 0.0){
+        vec3 v = normalize(-position.xyz);
+        vec3 h = normalize(v + lightToVertex);
+        specular = Material.Ks*pow(max(dot(h,normal),0.0),Material.Shininess);
     
-        }
     }
 
 
     //calculate Phong
 
-    return ambient + spotScale*(diffuse + specular)*Spot.L;
+    return ambient + (diffuse + specular)*Light.L;
 }
 
 
 void main() {
+    float dist = abs(Position.z);
+    float fogFactor = (Fog.MaxDistance-dist)/(Fog.MaxDistance-Fog.MinDistance);
+    fogFactor = clamp (fogFactor, 0.0, 1.0);
 
-    FragColor = vec4(blinnPhongSpot(Position, normalize(Normal)), 1.0);
+    vec3 shadeColour =blinnPhong(Position, normalize(Normal));
+
+    vec3 finalColour = mix(Fog.Colour, shadeColour, fogFactor);
+    
+    FragColor = vec4(finalColour, 1.0);
 }

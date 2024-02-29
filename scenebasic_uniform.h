@@ -26,12 +26,16 @@ private:
     float angle;
 
     //Torus torus;
-    //Plane plane;
+    Plane plane;
     //Teapot teapot;
     Cube cube;
 
     //std::unique_ptr<ObjMesh> mesh;
     float tPrev;
+
+    GLuint brickTex, mossTex, fireTex;
+
+    float rotationSpeed;
 
     glm::mat4 rotationMatrix;
 
