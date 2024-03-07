@@ -17,6 +17,7 @@
 #include "helper/objmesh.h"
 
 #include "helper/cube.h"
+#include <GLFW/glfw3.h>
 
 class SceneBasic_Uniform : public Scene
 {
@@ -41,6 +42,13 @@ private:
 
     void compile();
 
+    glm::vec3 cameraPosition = glm::vec3(3.0f, 1.6f, 3.0f);
+    glm::vec3 cameraFront  = glm::vec3(0.0f, 0.0f, -1.0f);
+    //Up position within world space
+    glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    float deltaTime;
+    float moveSpeed = 1;
 public:
     SceneBasic_Uniform();
 
@@ -49,6 +57,8 @@ public:
     void render();
     void resize(int, int);
     void setMatrices();
+    void setCameraRotation(glm::vec3 direction);
+    void setCameraPosition(float x, float y, std::string direction);
 };
 
 #endif // SCENEBASIC_UNIFORM_H

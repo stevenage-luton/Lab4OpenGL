@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <string>
 
 class Scene
 {
@@ -11,7 +12,7 @@ public:
     int width;
     int height;
 
-	Scene() : m_animate(true), width(800), height(600) { }
+	Scene() : m_animate(true), width(1800), height(600) { }
 	virtual ~Scene() {}
 
 	void setDimensions( int w, int h ) {
@@ -23,6 +24,10 @@ public:
       Load textures, initialize shaders, etc.
       */
     virtual void initScene() = 0;
+
+    virtual void setCameraRotation(glm::vec3 direction) = 0;
+
+    virtual void setCameraPosition(float x, float y, std::string direction) = 0;
 
     /**
       This is called prior to every frame.  Use this

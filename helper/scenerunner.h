@@ -1,3 +1,5 @@
+#pragma once
+
 #include <glad/glad.h>
 #include "scene.h"
 #include <GLFW/glfw3.h>
@@ -15,7 +17,23 @@ class SceneRunner {
 private:
     GLFWwindow * window;
     int fbw, fbh;
-	bool debug;           // Set true to enable debug messages
+	bool debug;// Set true to enable debug messages
+    //Relative position within world space
+    glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
+    //The direction of travel
+    glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+    //Up position within world space
+    glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    //Camera sidways rotation
+    float cameraYaw = -90.0f;
+    //Camera vertical rotation
+    float cameraPitch = 0.0f;
+    //Determines if first entry of mouse into window
+    bool mouseFirstEntry = true;
+    //Positions of camera from given last frame
+    float cameraLastXPos = 800.0f / 2.0f;
+    float cameraLastYPos = 600.0f / 2.0f;
 
 public:
     SceneRunner(const std::string & windowTitle, int width = WIN_WIDTH, int height = WIN_HEIGHT, int samples = 0) : debug(true) {
@@ -74,6 +92,8 @@ public:
         scene.initScene();
         scene.resize(fbw, fbh);
 
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
         // Enter the main loop
         mainLoop(window, scene);
 
@@ -121,7 +141,11 @@ private:
             GLUtils::checkForOpenGLError(__FILE__,__LINE__);
 			
             scene.update(float(glfwGetTime()));
+            scene.setCameraRotation(HandleMouse(window));
+            scene.setCameraPosition(glm::sin(glm::radians(cameraYaw)), glm::cos(glm::radians(cameraYaw)), ProcessUserInput(window));
             scene.render();
+
+            
             glfwSwapBuffers(window);
 
             glfwPollEvents();
@@ -129,5 +153,77 @@ private:
 			if (state == GLFW_RELEASE)
 				scene.animate(!scene.animating());*/
         }
+    }
+
+    glm::vec3 HandleMouse(GLFWwindow* window) {
+        GLdouble xPos, yPos;
+        glfwGetCursorPos(window, &xPos, &yPos);
+
+        //Initially no last positions, so sets last positions to current positions
+        if (mouseFirstEntry)
+        {
+            cameraLastXPos = (float)xPos;
+            cameraLastYPos = (float)yPos;
+            mouseFirstEntry = false;
+        }
+
+
+        //Sets values for change in position since last frame to current frame
+        float xOffset = (float)xPos - cameraLastXPos;
+        float yOffset = cameraLastYPos - (float)yPos;
+
+        //Sets last positions to current positions for next frame
+        cameraLastXPos = (float)xPos;
+        cameraLastYPos = (float)yPos;
+
+        //Moderates the change in position based on sensitivity value
+        const float sensitivity = 0.025f;
+        xOffset *= sensitivity;
+        yOffset *= sensitivity;
+
+        //Adjusts yaw & pitch values against changes in positions
+        cameraYaw += xOffset;
+        cameraPitch += yOffset;
+
+        //Prevents turning up & down beyond 90 degrees to look backwards
+        if (cameraPitch > 89.0f)
+        {
+            cameraPitch = 89.0f;
+        }
+        else if (cameraPitch < -89.0f)
+        {
+            cameraPitch = -89.0f;
+        }
+
+        //Modification of direction vector based on mouse turning
+        glm::vec3 direction;
+        direction.x = glm::cos(glm::radians(cameraYaw)) * glm::cos(glm::radians(cameraPitch));
+        direction.y = glm::sin(glm::radians(cameraPitch));
+        direction.z = glm::sin(glm::radians(cameraYaw)) * glm::cos(glm::radians(cameraPitch));
+        return direction;
+    }
+    std::string ProcessUserInput(GLFWwindow* window)
+    {
+        std::string dir;
+
+        //WASD controls
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        {
+            dir = "FORWARD";
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        {
+            dir = "BACK";
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        {
+            dir = "LEFT";
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        {
+            dir = "RIGHT";
+        }
+
+        return dir;
     }
 };

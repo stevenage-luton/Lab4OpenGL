@@ -35,6 +35,7 @@ void SceneBasic_Uniform::initScene()
     model = glm::mat4(1.0f);
 
     
+    
 
     //model = glm::rotate(model, glm::radians(-35.0f), vec3(1.0f,0.0f,0.0f));
     //model = glm::rotate(model, glm::radians(15.0f), vec3(0.0f, 1.0f, 0.0f));
@@ -94,7 +95,7 @@ void SceneBasic_Uniform::compile()
 
 void SceneBasic_Uniform::update( float t )
 {
-    float deltaTime = t - tPrev;
+    deltaTime = t - tPrev;
 
     if (tPrev == 0.0f) 
     {
@@ -122,12 +123,47 @@ void SceneBasic_Uniform::setMatrices() {
     prog.setUniform("MVP", projection * mv);
 }
 
+void SceneBasic_Uniform::setCameraRotation(glm::vec3 direction) {
+    cameraFront = normalize(direction);
+};
+
+void SceneBasic_Uniform::setCameraPosition(float x, float y, std::string direction) {
+    x = x * moveSpeed * deltaTime;
+
+    y = y * moveSpeed * deltaTime;
+
+    //std::cout << "Xspeed = " << x << endl;
+
+    //std::cout << "Yspeed = " << y << endl;
+
+	if (direction == "FORWARD")
+	{
+		cameraPosition.x += y;
+        cameraPosition.z += x;
+	}
+	else if (direction == "BACK")
+	{
+        cameraPosition.x -= y;
+        cameraPosition.z -= x;
+	}
+	else if (direction == "LEFT")
+	{
+        cameraPosition.x += x;
+        cameraPosition.z -= y;
+	}
+	else if (direction == "RIGHT")
+	{
+        cameraPosition.x -= x;
+        cameraPosition.z += y;
+	}
+};
+
 void SceneBasic_Uniform::render()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glm::vec3 cameraPosition = glm::vec3(6.0f * cos(angle), 0.5f, 6.0f * sin(angle));
-    view = glm::lookAt(cameraPosition, vec3(0.0f, 0.2f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+
+    view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
 
 
 
