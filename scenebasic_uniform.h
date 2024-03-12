@@ -19,6 +19,20 @@
 #include "helper/cube.h"
 #include <GLFW/glfw3.h>
 
+class GameObject {
+private:
+
+public:
+    GameObject(std::string ourMesh, glm::vec3 ourPosition) {
+        mesh = ourMesh;
+        position = ourPosition;
+    }
+
+
+    std::string mesh;
+    glm::vec3 position;
+};
+
 class SceneBasic_Uniform : public Scene
 {
 private:
@@ -31,10 +45,15 @@ private:
     //Teapot teapot;
     Cube cube;
 
-    //std::unique_ptr<ObjMesh> mesh;
+    std::unique_ptr<ObjMesh> RoadMesh;
+
+    std::unique_ptr<ObjMesh> RoadMesh2;
+
+    std::unique_ptr<ObjMesh> PavementMesh;
+
     float tPrev;
 
-    GLuint brickTex, mossTex, fireTex;
+    GLuint brickTex, mossTex, fireTex, roadTex, PavementTex;
 
     float rotationSpeed;
 
@@ -48,7 +67,9 @@ private:
     glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
     float deltaTime;
-    float moveSpeed = 1;
+
+    float moveSpeed = 3;
+    
 public:
     SceneBasic_Uniform();
 
@@ -59,6 +80,10 @@ public:
     void setMatrices();
     void setCameraRotation(glm::vec3 direction);
     void setCameraPosition(float x, float y, std::string direction);
+    std::vector<GameObject> gameObjects;
+    
 };
+
+
 
 #endif // SCENEBASIC_UNIFORM_H

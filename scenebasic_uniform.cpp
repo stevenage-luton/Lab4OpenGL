@@ -23,7 +23,10 @@ SceneBasic_Uniform::SceneBasic_Uniform() :
     plane(50.0f,50.0f,1,1) 
     /*teapot(14,glm::mat4(1.0f))*/
     /*torus(1.75f * 0.75f, 1.75f * 0.75f,50,50)*/ {
-    //mesh = ObjMesh::load("media/pig_triangulated.obj",true);
+    RoadMesh = ObjMesh::load("media/road.obj"),
+    RoadMesh2 = ObjMesh::load("media/RoadNoLine.obj"),
+
+    PavementMesh = ObjMesh::load("media/Pavement.obj");
 }
 
 void SceneBasic_Uniform::initScene()
@@ -41,6 +44,27 @@ void SceneBasic_Uniform::initScene()
     //model = glm::rotate(model, glm::radians(15.0f), vec3(0.0f, 1.0f, 0.0f));
 
     projection = glm::mat4(1.0f);
+    float dist = -48.0f;
+
+    for (int i = 0; i < 16; i++)
+    {
+
+        GameObject roadObj = GameObject("Road",vec3(0.0f,0.0f,dist));
+
+        dist += 6.0f;
+
+        gameObjects.push_back(roadObj);
+    }
+    dist = -48.0f;
+    for (int i = 0; i < 16; i++)
+    {
+
+        GameObject pavementObj = GameObject("Pavement", vec3(0.0f, 0.0f, dist));
+
+        dist += 6.0f;
+
+        gameObjects.push_back(pavementObj);
+    }
 
     /*float x, z;
     for (int i = 0; i < 3; i++)
@@ -64,13 +88,15 @@ void SceneBasic_Uniform::initScene()
 
     prog.setUniform("Light.L", vec3(1.0f));
     prog.setUniform("Light.La", vec3(0.05f));
-    prog.setUniform("Fog.MaxDistance", 10.0f);
+    prog.setUniform("Fog.MaxDistance", 15.0f);
     prog.setUniform("Fog.MinDistance", 1.0f);
     prog.setUniform("Fog.Colour", vec3(0.5f,0.5f,0.5f));
 
     angle = 0.0f;
 
     brickTex = Texture::loadTexture("media/texture/cement.jpg");
+    roadTex = Texture::loadTexture("media/texture/road.png");
+    PavementTex = Texture::loadTexture("media/texture/Pavement256.png");
     mossTex = Texture::loadTexture("media/texture/moss.png");
     fireTex = Texture::loadTexture("media/texture/fire.png");
     glActiveTexture(GL_TEXTURE0);
@@ -173,7 +199,7 @@ void SceneBasic_Uniform::render()
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, brickTex);
     prog.setUniform("Material.Kd", vec3(0.2f, 0.55f, 0.9f));
-    prog.setUniform("Material.Ka", vec3(0.2f * 0.3f, 0.55f * 0.3f, 0.9f * 0.3f));
+    prog.setUniform("Material.Ka", vec3(0.02f, 0.02f, 0.02f));
     prog.setUniform("Material.Ks", vec3(0.1f, 0.1f, 0.1f));
     prog.setUniform("Material.Shininess", 2.0f);
 
@@ -190,6 +216,50 @@ void SceneBasic_Uniform::render()
 
         cube.render();
         dist += 2.0f;
+    }
+
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, roadTex);
+
+    int num = 0;
+
+    for(auto obj : gameObjects)
+    {
+        if (obj.mesh == "Road")
+        {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, roadTex);
+
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, obj.position);
+
+            setMatrices();
+
+            if (num % 2 == 0)
+            {
+                RoadMesh->render();
+            }
+            else
+            {
+                RoadMesh2->render();
+            }
+
+            
+        }
+        else if (obj.mesh == "Pavement")
+        {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, PavementTex);
+
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, obj.position);
+
+            setMatrices();
+
+            PavementMesh->render();
+        }
+        num++;
     }
 
     //float dist = 0.0f;
@@ -222,18 +292,18 @@ void SceneBasic_Uniform::render()
 
     //torus.render();
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, mossTex);
-    prog.setUniform("Material.Kd", vec3(0.7f, 0.7f, 0.7f));
-    prog.setUniform("Material.Ks", vec3(0.0f, 0.0f, 0.0f));
-    prog.setUniform("Material.Ka", vec3(0.2f, 0.2f, 0.2f));
-    prog.setUniform("Material.Shininess", 180.0f);
+    //glActiveTexture(GL_TEXTURE0);
+    //glBindTexture(GL_TEXTURE_2D, mossTex);
+    //prog.setUniform("Material.Kd", vec3(0.7f, 0.7f, 0.7f));
+    //prog.setUniform("Material.Ks", vec3(0.0f, 0.0f, 0.0f));
+    //prog.setUniform("Material.Ka", vec3(0.2f, 0.2f, 0.2f));
+    //prog.setUniform("Material.Shininess", 180.0f);
 
-    model = glm::mat4(1.0f);
+    //model = glm::mat4(1.0f);
 
-    setMatrices();
+    //setMatrices();
 
-    plane.render();
+    //plane.render();
     //
     ////create the rotation matrix here and update the uniform in the shader 
 

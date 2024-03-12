@@ -5,8 +5,8 @@
 #include <GLFW/glfw3.h>
 #include "glutils.h"
 
-#define WIN_WIDTH 800
-#define WIN_HEIGHT 600
+#define WIN_WIDTH 1800
+#define WIN_HEIGHT 1200
 
 #include <map>
 #include <string>
@@ -142,7 +142,7 @@ private:
 			
             scene.update(float(glfwGetTime()));
             scene.setCameraRotation(HandleMouse(window));
-            scene.setCameraPosition(glm::sin(glm::radians(cameraYaw)), glm::cos(glm::radians(cameraYaw)), ProcessUserInput(window));
+            ProcessUserInput(window, scene);
             scene.render();
 
             
@@ -202,28 +202,33 @@ private:
         direction.z = glm::sin(glm::radians(cameraYaw)) * glm::cos(glm::radians(cameraPitch));
         return direction;
     }
-    std::string ProcessUserInput(GLFWwindow* window)
+    void ProcessUserInput(GLFWwindow* window, Scene& scene)
     {
         std::string dir;
+
+        
 
         //WASD controls
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         {
             dir = "FORWARD";
+            scene.setCameraPosition(glm::sin(glm::radians(cameraYaw)), glm::cos(glm::radians(cameraYaw)),dir);
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         {
             dir = "BACK";
+            scene.setCameraPosition(glm::sin(glm::radians(cameraYaw)), glm::cos(glm::radians(cameraYaw)), dir);
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
         {
             dir = "LEFT";
+            scene.setCameraPosition(glm::sin(glm::radians(cameraYaw)), glm::cos(glm::radians(cameraYaw)), dir);
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         {
             dir = "RIGHT";
+            scene.setCameraPosition(glm::sin(glm::radians(cameraYaw)), glm::cos(glm::radians(cameraYaw)), dir);
         }
 
-        return dir;
     }
 };
