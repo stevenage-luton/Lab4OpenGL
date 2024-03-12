@@ -25,7 +25,10 @@ SceneBasic_Uniform::SceneBasic_Uniform() :
     /*torus(1.75f * 0.75f, 1.75f * 0.75f,50,50)*/ {
     RoadMesh = ObjMesh::load("media/road.obj"),
     RoadMesh2 = ObjMesh::load("media/RoadNoLine.obj"),
-
+    ShopMesh = ObjMesh::load("media/Shops.obj"),
+    SideMesh = ObjMesh::load("media/Side.obj"),
+    WallMesh = ObjMesh::load("media/Wall.obj"),
+    LampMesh = ObjMesh::load("media/Lamp.obj"),
     PavementMesh = ObjMesh::load("media/Pavement.obj");
 }
 
@@ -65,6 +68,35 @@ void SceneBasic_Uniform::initScene()
 
         gameObjects.push_back(pavementObj);
     }
+    dist = -96.0f;
+    for (int i = 0; i < 8; i++)
+    {
+
+        GameObject lampObj = GameObject("Lamp", vec3(0.0f, 0.0f, dist));
+
+        dist += 12.0f;
+
+        gameObjects.push_back(lampObj);
+    }
+
+    dist = -48.0f;
+    for (int i = 0; i < 8; i++)
+    {
+
+        GameObject WallObj = GameObject("Wall", vec3(0.0f, 0.0f, dist));
+        GameObject SideObj = GameObject("Side", vec3(0.0f, 0.0f, dist));
+
+        dist += 12.0f;
+
+        gameObjects.push_back(WallObj);
+        gameObjects.push_back(SideObj);
+    }
+
+    dist = 0.0f;
+    GameObject ShopObj = GameObject("Shops", vec3(0.0f, 0.0f, dist));
+
+    gameObjects.push_back(ShopObj);
+    
 
     /*float x, z;
     for (int i = 0; i < 3; i++)
@@ -86,9 +118,9 @@ void SceneBasic_Uniform::initScene()
     prog.setUniform("lights[1].La", vec3(0.0f, 0.2f, 0.0f));
     prog.setUniform("lights[2].La", vec3(0.2f, 0.0f, 0.0f));*/
 
-    prog.setUniform("Light.L", vec3(1.0f));
-    prog.setUniform("Light.La", vec3(0.05f));
-    prog.setUniform("Fog.MaxDistance", 15.0f);
+    prog.setUniform("Light.L", vec3(0.5f));
+    prog.setUniform("Light.La", vec3(0.01f));
+    prog.setUniform("Fog.MaxDistance", 30.0f);
     prog.setUniform("Fog.MinDistance", 1.0f);
     prog.setUniform("Fog.Colour", vec3(0.5f,0.5f,0.5f));
 
@@ -97,6 +129,8 @@ void SceneBasic_Uniform::initScene()
     brickTex = Texture::loadTexture("media/texture/cement.jpg");
     roadTex = Texture::loadTexture("media/texture/road.png");
     PavementTex = Texture::loadTexture("media/texture/Pavement256.png");
+    ShopTex = Texture::loadTexture("media/texture/ShopTex.png");
+    LampTex = Texture::loadTexture("media/texture/Lamp.png");
     mossTex = Texture::loadTexture("media/texture/moss.png");
     fireTex = Texture::loadTexture("media/texture/fire.png");
     glActiveTexture(GL_TEXTURE0);
@@ -193,15 +227,15 @@ void SceneBasic_Uniform::render()
 
 
 
-    prog.setUniform("Light.Position", glm::vec4(0.0f,0.0f,0.0f,2.0f));
+    prog.setUniform("Light.Position", glm::vec4(0.0f,0.0f,2.0f,2.0f));
 
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, brickTex);
-    prog.setUniform("Material.Kd", vec3(0.2f, 0.55f, 0.9f));
+    prog.setUniform("Material.Kd", vec3(0.5f, 0.5f, 0.5f));
     prog.setUniform("Material.Ka", vec3(0.02f, 0.02f, 0.02f));
-    prog.setUniform("Material.Ks", vec3(0.1f, 0.1f, 0.1f));
-    prog.setUniform("Material.Shininess", 2.0f);
+    prog.setUniform("Material.Ks", vec3(0.0f, 0.0f, 0.0f));
+    prog.setUniform("Material.Shininess", 2000.0f);
 
     float dist = 0.0f;
 
@@ -259,6 +293,55 @@ void SceneBasic_Uniform::render()
 
             PavementMesh->render();
         }
+        else if (obj.mesh == "Wall")
+        {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, ShopTex);
+
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, obj.position);
+
+            setMatrices();
+
+            WallMesh->render();
+        }
+        else if (obj.mesh == "Shops")
+        {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, ShopTex);
+
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, obj.position);
+
+            setMatrices();
+
+            ShopMesh->render();
+        }
+        else if (obj.mesh == "Side")
+        {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, roadTex);
+
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, obj.position);
+
+            setMatrices();
+
+            SideMesh->render();
+        }
+        else if(obj.mesh == "Lamp")
+        {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, LampTex);
+
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, obj.position);
+
+            setMatrices();
+
+            LampMesh->render();
+        }
+
         num++;
     }
 

@@ -59,13 +59,30 @@ vec3 blinnPhong(vec3 position, vec3 normal){
 
 
 void main() {
+    vec4 alphaMap = texture(Texture, TexCoord);
     float dist = abs(Position.z);
     float fogFactor = (Fog.MaxDistance-dist)/(Fog.MaxDistance-Fog.MinDistance);
     fogFactor = clamp (fogFactor, 0.0, 1.0);
 
-    vec3 shadeColour =blinnPhong(Position, normalize(Normal));
+    vec3 shadeColour;
+
+    if(alphaMap.a<0.15f){
+        discard;
+    }
+    else{
+        if (gl_FrontFacing){
+            shadeColour =blinnPhong(Position, normalize(Normal));
+        }
+        else{
+            shadeColour =blinnPhong(Position, normalize(-Normal));
+        }
+    }
+
+    
 
     vec3 finalColour = mix(Fog.Colour, shadeColour, fogFactor);
     
+
+
     FragColor = vec4(finalColour, 1.0);
 }

@@ -45,15 +45,12 @@ private:
     //Teapot teapot;
     Cube cube;
 
-    std::unique_ptr<ObjMesh> RoadMesh;
+    std::unique_ptr<ObjMesh> RoadMesh, RoadMesh2, PavementMesh, WallMesh, ShopMesh, SideMesh, LampMesh;
 
-    std::unique_ptr<ObjMesh> RoadMesh2;
-
-    std::unique_ptr<ObjMesh> PavementMesh;
 
     float tPrev;
 
-    GLuint brickTex, mossTex, fireTex, roadTex, PavementTex;
+    GLuint brickTex, mossTex, fireTex, roadTex, PavementTex, ShopTex, LampTex;
 
     float rotationSpeed;
 
@@ -61,7 +58,7 @@ private:
 
     void compile();
 
-    glm::vec3 cameraPosition = glm::vec3(3.0f, 1.6f, 3.0f);
+    glm::vec3 cameraPosition = glm::vec3(3.0f, 3.0f, 3.0f);
     glm::vec3 cameraFront  = glm::vec3(0.0f, 0.0f, -1.0f);
     //Up position within world space
     glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
