@@ -65,7 +65,7 @@ private:
 
     float deltaTime;
 
-    float moveSpeed = 3;
+    float moveSpeed = 3.5;
     
 public:
     SceneBasic_Uniform();

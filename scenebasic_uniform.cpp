@@ -17,6 +17,8 @@ using std::endl;
 
 using glm::vec3;
 
+const int LIGHT_NUMBER = 16;
+
 SceneBasic_Uniform::SceneBasic_Uniform() :
     tPrev(0),
     rotationSpeed(glm::pi<float>() / 2.0f),
@@ -96,30 +98,43 @@ void SceneBasic_Uniform::initScene()
     GameObject ShopObj = GameObject("Shops", vec3(0.0f, 0.0f, dist));
 
     gameObjects.push_back(ShopObj);
-    
+   
 
-    /*float x, z;
-    for (int i = 0; i < 3; i++)
+    //prog.setUniform("Lights[0].L", vec3(1.9f, 1.9f, 01.9f));
+    //prog.setUniform("Lights[1].L", vec3(1.9f, 1.9f, 01.9f));
+    //prog.setUniform("Lights[2].L", vec3(1.9f, 1.9f, 01.9f));
+
+
+    prog.setUniform("Lights[0].La", vec3(0.01f, 0.01f, 0.01f));
+
+
+    /*prog.setUniform("Lights[0].Exponent", 200.0f);
+    prog.setUniform("Lights[1].Exponent", 200.0f);
+    prog.setUniform("Lights[2].Exponent", 200.0f);
+
+
+    prog.setUniform("Lights[0].Cutoff", glm::radians(15.0f));
+    prog.setUniform("Lights[1].Cutoff", glm::radians(15.0f));
+    prog.setUniform("Lights[2].Cutoff", glm::radians(15.0f));*/
+
+    for (int i = 0; i < LIGHT_NUMBER; i++)
     {
-        std::stringstream name;
-        name << "lights[" << i << "].Position";
-        x = 2.0f * cosf((glm::two_pi<float>() / 3) * i);
-        z = 2.0f * sinf((glm::two_pi<float>() / 3) * i);
 
-        prog.setUniform(name.str().c_str(), view * glm::vec4(x, 1.2f, z + 1.0f, 1.0f));
+        std::stringstream LightVal, Exponent, Cutoff;
+        LightVal << "Lights[" << i << "].L";
+
+        Exponent << "Lights[" << i << "].Exponent";
+
+        Cutoff << "Lights[" << i << "].Cutoff";
+
+        prog.setUniform(LightVal.str().c_str(), vec3(1.9f, 1.9f, 1.9f));
+        prog.setUniform(Exponent.str().c_str(), 75.0f);
+        prog.setUniform(Cutoff.str().c_str(), glm::radians(40.0f));
     }
 
 
-    prog.setUniform("lights[0].L", vec3(0.0f, 0.0f, 0.8f));
-    prog.setUniform("lights[1].L", vec3(0.0f, 0.8f, 0.0f));
-    prog.setUniform("lights[2].L", vec3(0.8f, 0.0f, 0.0f));
-
-    prog.setUniform("lights[0].La", vec3(0.0f, 0.0f, 0.2f));
-    prog.setUniform("lights[1].La", vec3(0.0f, 0.2f, 0.0f));
-    prog.setUniform("lights[2].La", vec3(0.2f, 0.0f, 0.0f));*/
-
-    prog.setUniform("Light.L", vec3(0.5f));
-    prog.setUniform("Light.La", vec3(0.01f));
+    //prog.setUniform("Light.L", vec3(0.5f));
+    //prog.setUniform("Light.La", vec3(0.01f));
     prog.setUniform("Fog.MaxDistance", 30.0f);
     prog.setUniform("Fog.MinDistance", 1.0f);
     prog.setUniform("Fog.Colour", vec3(0.5f,0.5f,0.5f));
@@ -216,6 +231,11 @@ void SceneBasic_Uniform::setCameraPosition(float x, float y, std::string directi
         cameraPosition.x -= x;
         cameraPosition.z += y;
 	}
+
+    if (cameraPosition.z >= 30.0f || cameraPosition.z <= -30.0f)
+    {
+        cameraPosition.z = 0.0f;
+    }
 };
 
 void SceneBasic_Uniform::render()
@@ -224,10 +244,40 @@ void SceneBasic_Uniform::render()
 
 
     view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
+    float lightDist = -47.0f;
+    for (int i = 0; i < LIGHT_NUMBER; i++)
+    {
+        glm::vec4 Position;
+        std::stringstream name;
+        name << "Lights[" << i << "].Position";
+
+        std::stringstream direction;
+        direction << "Lights[" << i << "].Direction";
+        if (i % 2 == 0)
+        {
+            Position = glm::vec4(4.0f, 16.0f, lightDist, 1.0f);
+        }
+        else
+        {
+            Position = glm::vec4(-4.0f, 16.0f, lightDist, 1.0f);
+            lightDist += 12.0f;
+        }
+        
+
+        glm::vec3 Direction = glm::vec3(0.0f, 10.0f, 0.0f);
+
+        glm::mat3 normalMatrix = glm::mat3(glm::vec3(view[0]), vec3(view[1]), vec3(view[2]));
+
+        prog.setUniform(name.str().c_str(), view * Position);
 
 
+        prog.setUniform(direction.str().c_str(), normalMatrix * vec3(-Direction));
 
-    prog.setUniform("Light.Position", glm::vec4(0.0f,0.0f,2.0f,2.0f));
+
+    }
+
+    //prog.setUniform("Lights[1].Position", view * glm::vec4(4.0f, 16.0f, 13.0f, 1.0f));
+    //prog.setUniform("Lights[2].Position", view * glm::vec4(4.0f, 16.0f, 25.0f, 1.0f));
 
 
     glActiveTexture(GL_TEXTURE0);

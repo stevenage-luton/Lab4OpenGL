@@ -11,8 +11,11 @@ uniform struct LightInfo{
     vec4 Position;
     vec3 La; //Ambient
     vec3 L; //Diffuse & Specular
+    vec3 Direction;
+    float Exponent;
+    float Cutoff;
 
-}Light;
+}Lights [16];
 
 uniform struct MaterialInfo{
     vec3 Kd;
@@ -30,32 +33,42 @@ uniform struct FogInfo{
 }Fog;
 
 
-vec3 blinnPhong(vec3 position, vec3 normal){
+vec3 blinnPhong(int light, vec3 position, vec3 normal){
     //Variables
     vec3 diffuse = vec3(0), specular = vec3(0);
     vec3 texColour = texture(Texture,TexCoord).rgb;
 
     //Ambient Light
-    vec3 ambient = Light.La*texColour;
+    vec3 ambient = Lights[light].La*texColour;
 
     //Diffuse
-    vec3 lightToVertex = normalize(Light.Position.xyz - position);
+    vec3 lightToVertex = normalize(Lights[light].Position.xyz - position);
+    float cosine = dot(-lightToVertex,normalize(Lights[light].Direction));
+    float angle = acos(cosine);
 
-    float dotProduct = max(dot(lightToVertex, normal),0.0);
-    diffuse = texColour*dotProduct;
+    float spotScale;
 
-    if (dotProduct > 0.0){
-        vec3 v = normalize(-position.xyz);
-        vec3 h = normalize(v + lightToVertex);
-        specular = Material.Ks*pow(max(dot(h,normal),0.0),Material.Shininess);
+    if  (angle>=0.0&&angle<Lights[light].Cutoff){
+        spotScale = pow(cosine, Lights[light].Exponent);
+        float dotProduct = max(dot(lightToVertex, normal),0.0);
+        diffuse = texColour*dotProduct;
+
+        if (dotProduct > 0.0){
+            vec3 v = normalize(-position.xyz);
+            vec3 h = normalize(v + lightToVertex);
+            specular = Material.Ks*pow(max(dot(h,normal),0.0),Material.Shininess);
     
+        }
     }
+
+    
 
 
     //calculate Phong
 
-    return ambient + (diffuse + specular)*Light.L;
+    return ambient + spotScale*(diffuse + specular)*Lights[light].L;
 }
+
 
 
 void main() {
@@ -66,17 +79,22 @@ void main() {
 
     vec3 shadeColour;
 
-    if(alphaMap.a<0.15f){
+    for (int i=0;i<16;i++){
+        if(alphaMap.a<0.15f){
         discard;
     }
     else{
         if (gl_FrontFacing){
-            shadeColour =blinnPhong(Position, normalize(Normal));
+            shadeColour +=blinnPhong(i,Position, normalize(Normal));
         }
         else{
-            shadeColour =blinnPhong(Position, normalize(-Normal));
+            shadeColour +=blinnPhong(i,Position, normalize(-Normal));
         }
     }
+        
+    }
+
+    
 
     
 
