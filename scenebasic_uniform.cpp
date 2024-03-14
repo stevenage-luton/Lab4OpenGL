@@ -22,7 +22,8 @@ const int LIGHT_NUMBER = 16;
 SceneBasic_Uniform::SceneBasic_Uniform() :
     tPrev(0),
     rotationSpeed(glm::pi<float>() / 2.0f),
-    plane(50.0f,50.0f,1,1) 
+    plane(50.0f,50.0f,1,1),
+    sky(100.0f)
     /*teapot(14,glm::mat4(1.0f))*/
     /*torus(1.75f * 0.75f, 1.75f * 0.75f,50,50)*/ {
     RoadMesh = ObjMesh::load("media/road.obj"),
@@ -141,6 +142,8 @@ void SceneBasic_Uniform::initScene()
 
     angle = 0.0f;
 
+    GLuint skyBoxTex = Texture::loadHdrCubeMap("media/texture/cube/pisa-hdr/pisa");
+
     brickTex = Texture::loadTexture("media/texture/cement.jpg");
     roadTex = Texture::loadTexture("media/texture/road.png");
     PavementTex = Texture::loadTexture("media/texture/Pavement256.png");
@@ -160,6 +163,8 @@ void SceneBasic_Uniform::compile()
 	try {
 		prog.compileShader("shader/basic_uniform.vert");
 		prog.compileShader("shader/basic_uniform.frag");
+        skyProg.compileShader("shader/skybox.vert");
+        skyProg.compileShader("shader/skybox.frag");
 		prog.link();
 		prog.use();
 	} catch (GLSLProgramException &e) {
@@ -188,14 +193,14 @@ void SceneBasic_Uniform::update( float t )
 
 }
 
-void SceneBasic_Uniform::setMatrices() {
+void SceneBasic_Uniform::setMatrices(GLSLProgram &p) {
     glm::mat4 mv = view * model;
 
-    prog.setUniform("ModelViewMatrix", mv);
+    p.setUniform("ModelViewMatrix", mv);
 
-    prog.setUniform("NormalMatrix", glm::mat3(vec3(mv[0]), vec3(mv[1]), vec3(mv[2])));
+    p.setUniform("NormalMatrix", glm::mat3(vec3(mv[0]), vec3(mv[1]), vec3(mv[2])));
 
-    prog.setUniform("MVP", projection * mv);
+    p.setUniform("MVP", projection * mv);
 }
 
 void SceneBasic_Uniform::setCameraRotation(glm::vec3 direction) {
@@ -287,20 +292,20 @@ void SceneBasic_Uniform::render()
     prog.setUniform("Material.Ks", vec3(0.0f, 0.0f, 0.0f));
     prog.setUniform("Material.Shininess", 2000.0f);
 
-    float dist = 0.0f;
+    //float dist = 0.0f;
 
-    for (int i = 0; i < 5; i++)
-    {
+    //for (int i = 0; i < 5; i++)
+    //{
 
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, vec3(0.0f, 0.5f, -dist));
-        model = glm::rotate(model, glm::radians(-90.0f), vec3(1.0f, 0.0f, 0.0f));
+    //    model = glm::mat4(1.0f);
+    //    model = glm::translate(model, vec3(0.0f, 0.5f, -dist));
+    //    model = glm::rotate(model, glm::radians(-90.0f), vec3(1.0f, 0.0f, 0.0f));
 
-        setMatrices();
+    //    setMatrices();
 
-        cube.render();
-        dist += 2.0f;
-    }
+    //    cube.render();
+    //    dist += 2.0f;
+    //}
 
 
     glActiveTexture(GL_TEXTURE0);
@@ -318,7 +323,7 @@ void SceneBasic_Uniform::render()
             model = glm::mat4(1.0f);
             model = glm::translate(model, obj.position);
 
-            setMatrices();
+            setMatrices(prog);
 
             if (num % 2 == 0)
             {
@@ -339,7 +344,7 @@ void SceneBasic_Uniform::render()
             model = glm::mat4(1.0f);
             model = glm::translate(model, obj.position);
 
-            setMatrices();
+            setMatrices(prog);
 
             PavementMesh->render();
         }
@@ -351,7 +356,7 @@ void SceneBasic_Uniform::render()
             model = glm::mat4(1.0f);
             model = glm::translate(model, obj.position);
 
-            setMatrices();
+            setMatrices(prog);
 
             WallMesh->render();
         }
@@ -363,7 +368,7 @@ void SceneBasic_Uniform::render()
             model = glm::mat4(1.0f);
             model = glm::translate(model, obj.position);
 
-            setMatrices();
+            setMatrices(prog);
 
             ShopMesh->render();
         }
@@ -375,7 +380,7 @@ void SceneBasic_Uniform::render()
             model = glm::mat4(1.0f);
             model = glm::translate(model, obj.position);
 
-            setMatrices();
+            setMatrices(prog);
 
             SideMesh->render();
         }
@@ -387,7 +392,7 @@ void SceneBasic_Uniform::render()
             model = glm::mat4(1.0f);
             model = glm::translate(model, obj.position);
 
-            setMatrices();
+            setMatrices(prog);
 
             LampMesh->render();
         }

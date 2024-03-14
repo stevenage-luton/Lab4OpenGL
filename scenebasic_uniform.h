@@ -19,6 +19,8 @@
 #include "helper/cube.h"
 #include <GLFW/glfw3.h>
 
+#include "helper/skybox.h"
+
 class GameObject {
 private:
 
@@ -38,8 +40,11 @@ class SceneBasic_Uniform : public Scene
 private:
     /*GLuint vaoHandle;*/
     GLSLProgram prog;
+    GLSLProgram skyProg;
     float angle;
 
+
+    SkyBox sky;
     //Torus torus;
     Plane plane;
     //Teapot teapot;
@@ -74,7 +79,7 @@ public:
     void update( float t );
     void render();
     void resize(int, int);
-    void setMatrices();
+    void setMatrices(GLSLProgram &p);
     void setCameraRotation(glm::vec3 direction);
     void setCameraPosition(float x, float y, std::string direction);
     std::vector<GameObject> gameObjects;
