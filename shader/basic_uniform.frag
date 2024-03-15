@@ -20,7 +20,7 @@ uniform struct LightInfo{
     float Exponent;
     float Cutoff;
 
-}Lights [16];
+}Lights [17];
 
 uniform struct MaterialInfo{
     vec3 Kd;
@@ -86,7 +86,7 @@ void main() {
 
     vec3 shadeColour;
 
-    for (int i=0;i<16;i++){
+    for (int i=0;i<17;i++){
         if(alphaMap.a<0.15f){
         discard;
     }

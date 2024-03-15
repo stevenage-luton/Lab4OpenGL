@@ -21,7 +21,7 @@ const int LIGHT_NUMBER = 16;
 
 SceneBasic_Uniform::SceneBasic_Uniform() :
     tPrev(0),
-    rotationSpeed(glm::pi<float>() / 2.0f),
+    rotationSpeed(glm::pi<float>() / 5.0f),
     plane(50.0f,50.0f,1,1),
     sky(100.0f)
     /*teapot(14,glm::mat4(1.0f))*/
@@ -132,7 +132,9 @@ void SceneBasic_Uniform::initScene()
         prog.setUniform(Exponent.str().c_str(), 75.0f);
         prog.setUniform(Cutoff.str().c_str(), glm::radians(40.0f));
     }
-
+    prog.setUniform("Lights[16].L", vec3(2.0f, 1.0f, 1.0f));
+    prog.setUniform("Lights[16].Exponent", 3.0f);
+    prog.setUniform("Lights[16].Cutoff", glm::radians(80.0f));
 
     //prog.setUniform("Light.L", vec3(0.5f));
     //prog.setUniform("Light.La", vec3(0.01f));
@@ -178,7 +180,6 @@ void SceneBasic_Uniform::update( float t )
         deltaTime = 0.0f;
     }
     tPrev = t;
-    angle += 0.1f * deltaTime;
     if (this->m_animate)
     {
         angle += rotationSpeed * deltaTime;
@@ -245,6 +246,9 @@ void SceneBasic_Uniform::render()
 
 
     view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
+
+    
+
     float lightDist = -47.0f;
     for (int i = 0; i < LIGHT_NUMBER; i++)
     {
@@ -277,8 +281,13 @@ void SceneBasic_Uniform::render()
 
     }
 
+    glm::vec4 redLightPos = glm::vec4(0.0f, 10.0f,0.0f, 1.0f);
+    glm::vec3 Direction = glm::vec3(0.0f, 10.0f , 20.0f * cos(angle));
+    prog.setUniform("Lights[16].Position", view * redLightPos);
+    glm::mat3 normalMatrix = glm::mat3(glm::vec3(view[0]), vec3(view[1]), vec3(view[2]));
+    prog.setUniform("Lights[16].Direction", normalMatrix * vec3(-Direction));
     //disable depth test and set the view to the normal matrix so the skybox stays far away
-    view = glm::mat3(glm::vec3(view[0]), vec3(view[1]), vec3(view[2]));
+    view = normalMatrix;
     glDepthMask(GL_FALSE);
     skyProg.use();
     model = glm::mat4(1.0f);
