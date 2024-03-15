@@ -142,7 +142,7 @@ void SceneBasic_Uniform::initScene()
 
     angle = 0.0f;
 
-    GLuint skyBoxTex = Texture::loadHdrCubeMap("media/texture/cube/pisa-hdr/pisa");
+    GLuint skyBoxTex = Texture::loadCubeMap("media/texture/cube/sky/FullMoon");
 
     brickTex = Texture::loadTexture("media/texture/cement.jpg");
     roadTex = Texture::loadTexture("media/texture/road.png");
@@ -165,6 +165,7 @@ void SceneBasic_Uniform::compile()
 		prog.compileShader("shader/basic_uniform.frag");
         skyProg.compileShader("shader/skybox.vert");
         skyProg.compileShader("shader/skybox.frag");
+        skyProg.link();
 		prog.link();
 		prog.use();
 	} catch (GLSLProgramException &e) {
@@ -237,10 +238,10 @@ void SceneBasic_Uniform::setCameraPosition(float x, float y, std::string directi
         cameraPosition.z += y;
 	}
 
-    if (cameraPosition.z >= 30.0f || cameraPosition.z <= -30.0f)
+   /* if (cameraPosition.z >= 30.0f || cameraPosition.z <= -30.0f)
     {
         cameraPosition.z = 0.0f;
-    }
+    }*/
 };
 
 void SceneBasic_Uniform::render()
@@ -281,8 +282,16 @@ void SceneBasic_Uniform::render()
 
     }
 
-    //prog.setUniform("Lights[1].Position", view * glm::vec4(4.0f, 16.0f, 13.0f, 1.0f));
-    //prog.setUniform("Lights[2].Position", view * glm::vec4(4.0f, 16.0f, 25.0f, 1.0f));
+    //disable depth test and set the view to the normal matrix so the skybox stays far away
+    view = glm::mat3(glm::vec3(view[0]), vec3(view[1]), vec3(view[2]));
+    glDepthMask(GL_FALSE);
+    skyProg.use();
+    model = glm::mat4(1.0f);
+    setMatrices(skyProg);
+    sky.render();
+    glDepthMask(GL_TRUE);
+    view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
+    prog.use();
 
 
     glActiveTexture(GL_TEXTURE0);
