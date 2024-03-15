@@ -138,7 +138,7 @@ void SceneBasic_Uniform::initScene()
     //prog.setUniform("Light.La", vec3(0.01f));
     prog.setUniform("Fog.MaxDistance", 30.0f);
     prog.setUniform("Fog.MinDistance", 1.0f);
-    prog.setUniform("Fog.Colour", vec3(0.5f,0.5f,0.5f));
+    prog.setUniform("Fog.Colour", vec3(0.059f, 0.078f, 0.106f));
 
     angle = 0.0f;
 
