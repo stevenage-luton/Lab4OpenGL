@@ -144,18 +144,13 @@ void SceneBasic_Uniform::initScene()
 
     GLuint skyBoxTex = Texture::loadCubeMap("media/texture/cube/sky/FullMoon");
 
-    brickTex = Texture::loadTexture("media/texture/cement.jpg");
+    rustTex = Texture::loadTexture("media/texture/rust.png");
     roadTex = Texture::loadTexture("media/texture/road.png");
     PavementTex = Texture::loadTexture("media/texture/Pavement256.png");
     ShopTex = Texture::loadTexture("media/texture/ShopTex.png");
     LampTex = Texture::loadTexture("media/texture/Lamp.png");
-    mossTex = Texture::loadTexture("media/texture/moss.png");
-    fireTex = Texture::loadTexture("media/texture/fire.png");
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, brickTex);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, mossTex);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, rustTex);
 }
 
 void SceneBasic_Uniform::compile()
@@ -295,7 +290,7 @@ void SceneBasic_Uniform::render()
 
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, brickTex);
+    glBindTexture(GL_TEXTURE_2D, roadTex);
     prog.setUniform("Material.Kd", vec3(0.5f, 0.5f, 0.5f));
     prog.setUniform("Material.Ka", vec3(0.02f, 0.02f, 0.02f));
     prog.setUniform("Material.Ks", vec3(0.0f, 0.0f, 0.0f));

@@ -5,7 +5,12 @@ in vec3 Normal;
 in vec2 TexCoord;
 
 layout (binding = 0) uniform sampler2D Texture;
+layout (binding = 1) uniform sampler2D Overlay;
 layout (location = 0) out vec4 FragColor;
+
+uniform float Gamma = 1.4;
+
+uniform bool OverlayToggle;
 
 uniform struct LightInfo{
     vec4 Position;
@@ -36,8 +41,9 @@ uniform struct FogInfo{
 vec3 blinnPhong(int light, vec3 position, vec3 normal){
     //Variables
     vec3 diffuse = vec3(0), specular = vec3(0);
-    vec3 texColour = texture(Texture,TexCoord).rgb;
-
+    vec4 baseColour = texture(Texture,TexCoord);
+    vec4 overlayColour = texture(Overlay,TexCoord);
+    vec3 texColour = mix(baseColour.rgb, overlayColour.rgb, overlayColour.a);
     //Ambient Light
     vec3 ambient = Lights[light].La*texColour;
 
@@ -73,6 +79,7 @@ vec3 blinnPhong(int light, vec3 position, vec3 normal){
 
 void main() {
     vec4 alphaMap = texture(Texture, TexCoord);
+
     float dist = abs(Position.z);
     float fogFactor = (Fog.MaxDistance-dist)/(Fog.MaxDistance-Fog.MinDistance);
     fogFactor = clamp (fogFactor, 0.0, 1.0);
@@ -102,5 +109,5 @@ void main() {
     
 
 
-    FragColor = vec4(finalColour, 1.0);
+    FragColor = vec4(pow(finalColour, vec3(1.0/Gamma)), 1.0);
 }

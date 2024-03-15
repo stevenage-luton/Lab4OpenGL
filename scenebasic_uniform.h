@@ -55,7 +55,7 @@ private:
 
     float tPrev;
 
-    GLuint brickTex, mossTex, fireTex, roadTex, PavementTex, ShopTex, LampTex;
+    GLuint rustTex, roadTex, PavementTex, ShopTex, LampTex;
 
     float rotationSpeed;
 

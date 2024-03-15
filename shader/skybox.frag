@@ -4,7 +4,7 @@ layout (binding = 0) uniform samplerCube CubeMap;
 in vec3 Vec;
 layout (location = 0) out vec4 FragColor;
 
-
+uniform float Gamma = 1.4;
 
 void main() {
     vec4 bottomColour, topColour;
@@ -23,5 +23,5 @@ void main() {
    // Mix the cubemap color with the gradient color
     vec4 finalColor = mix(gradientColor, TexColour, 1-gradientColor.a);
 
-    FragColor = vec4(finalColor);
+    FragColor = vec4(pow(finalColor, vec4(1.0/Gamma)));
 }
