@@ -234,10 +234,10 @@ void SceneBasic_Uniform::setCameraPosition(float x, float y, std::string directi
         cameraPosition.z += y;
 	}
 
-   /* if (cameraPosition.z >= 30.0f || cameraPosition.z <= -30.0f)
+    if (cameraPosition.z >= 30.0f || cameraPosition.z <= -30.0f)
     {
         cameraPosition.z = 0.0f;
-    }*/
+    }
 };
 
 void SceneBasic_Uniform::render()
