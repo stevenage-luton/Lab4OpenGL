@@ -10,5 +10,7 @@ For lights, we iterate through every light in the scene except for the red light
 Keyboard and Mouse inputs are done using custom functions added to the Scenerunner.h helper file. Virtual methods are in the Scene class, which are implemented in SceneBasic_Uniform and are used to move the camera with a given vector, which is provided by the functions added to Scenerunner.
 ## Anything else which will help us to understand how your prototype works.
 WASD to move, Mouse to look. There's no collision so you can go and see the backfaces of the shops if you'd like.
+
+The .exe version can run without any help-- it's in x64 Build/Release.
 ## A Link to the unlisted YouTube Video 
 https://youtu.be/iSQ5LW7fvnM
