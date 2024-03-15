@@ -39,12 +39,7 @@ void SceneBasic_Uniform::initScene()
 {
     compile();
 
-    glEnable(GL_DEPTH_TEST);
-
     model = glm::mat4(1.0f);
-
-    
-    
 
     //model = glm::rotate(model, glm::radians(-35.0f), vec3(1.0f,0.0f,0.0f));
     //model = glm::rotate(model, glm::radians(15.0f), vec3(0.0f, 1.0f, 0.0f));
@@ -138,7 +133,7 @@ void SceneBasic_Uniform::initScene()
     //prog.setUniform("Light.La", vec3(0.01f));
     prog.setUniform("Fog.MaxDistance", 30.0f);
     prog.setUniform("Fog.MinDistance", 1.0f);
-    prog.setUniform("Fog.Colour", vec3(0.5f,0.5f,0.5f));
+    prog.setUniform("Fog.Colour", vec3(0.059, 0.078, 0.106));
 
     angle = 0.0f;
 
@@ -151,11 +146,78 @@ void SceneBasic_Uniform::initScene()
     LampTex = Texture::loadTexture("media/texture/Lamp.png");
     mossTex = Texture::loadTexture("media/texture/moss.png");
     fireTex = Texture::loadTexture("media/texture/fire.png");
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, brickTex);
+
+    setupFBO();
+
+    GLfloat verts[] = {
+        -1.0f, -1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+        -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, 0.0f
+    };
+    GLfloat tc[] = {
+        0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+        0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+    };
+
+    unsigned int handle[2];
+    glGenBuffers(2, handle);
+    glBindBuffer(GL_ARRAY_BUFFER, handle[0]);
+    glBufferData(GL_ARRAY_BUFFER, 6 * 3 * sizeof(float), verts, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, handle[1]);
+    glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float), tc, GL_STATIC_DRAW);
+
+    glGenVertexArrays(1, &quad);
+    glBindVertexArray(quad);
+
+    glBindBuffer(GL_ARRAY_BUFFER, handle[0]);
+    glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, handle[1]);
+    glVertexAttribPointer((GLuint)2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(2);
+
+    glBindVertexArray(0);
+
+}
+
+void SceneBasic_Uniform::setupFBO() {
+
+    //frameBuffer and RenderTexture
+    glGenFramebuffers(1, &hdrFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+
+    //Depth Buffer and Fragment
+    GLuint depthBuffer;
+
+    glGenRenderbuffers(1, &depthBuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, mossTex);
+    glGenTextures(1, &hdrTex);
+    glBindTexture(GL_TEXTURE_2D, hdrTex);
+
+    glTexStorage2D(GL_TEXTURE_2D,1, GL_RGBA32F, width, height);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdrTex, 0);
+
+    GLenum drawBuffers[] = { GL_NONE, GL_COLOR_ATTACHMENT0 };
+
+    glDrawBuffers(2, drawBuffers);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+}
+
+void SceneBasic_Uniform::renderToTexture() {
+    prog.setUniform("RenderTex", 1);
+    glViewport(0, 0, 512, 512);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
 }
 
 void SceneBasic_Uniform::compile()
@@ -244,12 +306,60 @@ void SceneBasic_Uniform::setCameraPosition(float x, float y, std::string directi
     }*/
 };
 
-void SceneBasic_Uniform::render()
-{
+void SceneBasic_Uniform::render() {
+    pass1();
+    computeLogAvgLuminence();
+    pass2();
+}
+
+void SceneBasic_Uniform::pass1() {
+    prog.setUniform("Pass", 1);
+    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+    glViewport(0, 0, width, height);
+    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
+    glEnable(GL_DEPTH_TEST);
     view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
+    projection = glm::perspective(glm::radians(70.0f), (float)width / height, 0.3f, 100.0f);
+    renderScene();
+}
+
+void SceneBasic_Uniform::pass2() {
+    prog.setUniform("Pass", 2);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glDisable(GL_DEPTH_TEST);
+    
+    model = glm::mat4(1.0f);
+    view = glm::mat4(1.0f);
+    projection = glm::mat4(1.0f);
+
+    setMatrices(prog);
+
+    glBindVertexArray(quad);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void SceneBasic_Uniform::computeLogAvgLuminence() {
+    int size = width * height;
+    std::vector<GLfloat>texData(size * 3);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, hdrTex);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, texData.data());
+    float sum = 0;
+    for (int i = 0; i < size; i++)
+    {
+        float lum = glm::dot(glm::vec3(texData[i * 3 + 0], texData[i * 3 + 1], texData[i * 3 + 2]), vec3(0.2126f,0.7152f,0.0772f));
+        float sum = logf(lum + 0.00001f);       
+    }
+
+    prog.setUniform("AverageLum", expf(sum/size));
+}
+
+void SceneBasic_Uniform::renderScene()
+{
+ 
     float lightDist = -47.0f;
     for (int i = 0; i < LIGHT_NUMBER; i++)
     {

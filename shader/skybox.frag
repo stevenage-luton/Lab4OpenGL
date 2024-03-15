@@ -8,11 +8,11 @@ layout (location = 0) out vec4 FragColor;
 
 void main() {
     vec4 bottomColour, topColour;
-    bottomColour = vec4(0.5f,0.5f,0.5f,1.0f);
+    bottomColour = vec4(0.059,0.078,0.106,1.0f);
     topColour = vec4(0.0f,0.0f,0.0f,0.0f);
 
     // Calculate the vertical position from -1 (bottom) to 1 (top)
-    float gradientFactor = (Vec.y + 1.0) / 50.0;
+    float gradientFactor = (Vec.y + 1.0) / 80.0;
 
     // Interpolate between top and bottom color based on the gradient factor
     vec4 gradientColor = mix(bottomColour, topColour, gradientFactor);

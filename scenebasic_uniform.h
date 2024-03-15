@@ -50,12 +50,14 @@ private:
     //Teapot teapot;
     Cube cube;
 
-    std::unique_ptr<ObjMesh> RoadMesh, RoadMesh2, PavementMesh, WallMesh, ShopMesh, SideMesh, LampMesh;
+    std::unique_ptr<ObjMesh> RoadMesh, RoadMesh2, PavementMesh, WallMesh, ShopMesh, SideMesh, LampMesh, spot;
 
 
     float tPrev;
 
     GLuint brickTex, mossTex, fireTex, roadTex, PavementTex, ShopTex, LampTex;
+
+    GLuint hdrFBO, quad, hdrTex, avgTex;
 
     float rotationSpeed;
 
@@ -71,9 +73,15 @@ private:
     float deltaTime;
 
     float moveSpeed = 3.5;
-    
+
+    void pass1();
+    void pass2();
+    void computeLogAvgLuminence();
+    void renderScene();
 public:
     SceneBasic_Uniform();
+    void setupFBO();
+    void renderToTexture();
 
     void initScene();
     void update( float t );
