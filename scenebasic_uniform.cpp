@@ -133,8 +133,8 @@ void SceneBasic_Uniform::initScene()
         prog.setUniform(Cutoff.str().c_str(), glm::radians(40.0f));
     }
     prog.setUniform("Lights[16].L", vec3(2.0f, 1.0f, 1.0f));
-    prog.setUniform("Lights[16].Exponent", 3.0f);
-    prog.setUniform("Lights[16].Cutoff", glm::radians(80.0f));
+    prog.setUniform("Lights[16].Exponent", 10.0f);
+    prog.setUniform("Lights[16].Cutoff", glm::radians(50.0f));
 
     //prog.setUniform("Light.L", vec3(0.5f));
     //prog.setUniform("Light.La", vec3(0.01f));
@@ -282,7 +282,7 @@ void SceneBasic_Uniform::render()
     }
 
     glm::vec4 redLightPos = glm::vec4(0.0f, 10.0f,0.0f, 1.0f);
-    glm::vec3 Direction = glm::vec3(0.0f, 10.0f , 20.0f * cos(angle));
+    glm::vec3 Direction = glm::vec3(0.0f, 10.0f , 20.0f * sin(angle));
     prog.setUniform("Lights[16].Position", view * redLightPos);
     glm::mat3 normalMatrix = glm::mat3(glm::vec3(view[0]), vec3(view[1]), vec3(view[2]));
     prog.setUniform("Lights[16].Direction", normalMatrix * vec3(-Direction));
