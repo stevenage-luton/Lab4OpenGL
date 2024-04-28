@@ -49,6 +49,7 @@ vec3 blinnPhong(int light, vec3 position, vec3 normal){
 
     //Diffuse
     vec3 lightToVertex = normalize(Lights[light].Position.xyz - position);
+
     float cosine = dot(-lightToVertex,normalize(Lights[light].Direction));
     float angle = acos(cosine);
 

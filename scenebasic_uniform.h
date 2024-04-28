@@ -41,6 +41,8 @@ private:
     /*GLuint vaoHandle;*/
     GLSLProgram prog;
     GLSLProgram skyProg;
+    GLSLProgram renderTexProg;
+
     float angle;
 
 
@@ -57,6 +59,8 @@ private:
 
     GLuint rustTex, roadTex, PavementTex, ShopTex, LampTex;
 
+    GLuint fsQuad, renderTex,intermediateTex,renderFBO, intermediateFBO;
+
     float rotationSpeed;
 
     glm::mat4 rotationMatrix;
@@ -71,6 +75,13 @@ private:
     float deltaTime;
 
     float moveSpeed = 3.5;
+
+    void setupFBO();
+    void pass1();
+    void pass2();
+    void pass3();
+
+    float gauss(float, float);
     
 public:
     SceneBasic_Uniform();

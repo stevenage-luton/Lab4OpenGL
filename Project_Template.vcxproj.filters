@@ -69,6 +69,9 @@
     <ClCompile Include="glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="helper\sphere.cpp">
+      <Filter>helper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\basic_uniform.frag">
@@ -81,6 +84,12 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="shader\skybox.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shader\passthrough.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shader\rendertex.frag">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>
@@ -140,6 +149,12 @@
       <Filter>helper</Filter>
     </ClInclude>
     <ClInclude Include="helper\texture.h">
+      <Filter>helper</Filter>
+    </ClInclude>
+    <ClInclude Include="helper\sphere.h">
+      <Filter>helper</Filter>
+    </ClInclude>
+    <ClInclude Include="helper\random.h">
       <Filter>helper</Filter>
     </ClInclude>
   </ItemGroup>
