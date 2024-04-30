@@ -1,5 +1,5 @@
-# COMP3015 CW1 Huw Jenkins
-This is the codebase for my Coursework 1 Street Scene based on early PS1 games such as Resident Evil and Silent Hill.
+# COMP3015 CW2 Huw Jenkins
+This is the codebase for my Coursework 2 Street Scene based on early PS1 games such as Resident Evil and Silent Hill.
 ## Which version Visual Studio and Operating System you used to test/write the code locally?
 Visual Studio 2022, Microsoft Windows 11.
 ## How does it work? How does your code fit together and how should a programmer navigate it?
