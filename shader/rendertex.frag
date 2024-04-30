@@ -14,7 +14,7 @@ layout(binding = 6) uniform sampler2D depthTexture;
 
 uniform float time;
 
-void make_kernel(inout vec4 n[9], sampler2D tex, vec2 coord)
+void makeKernel(inout vec4 n[9], sampler2D tex, vec2 coord)
 {
 	float w = 1.0 / width;
 	float h = 1.0 / height;
@@ -38,7 +38,7 @@ void main(){
 	height = 1080.0;
 
 	vec4 n[9];
-	make_kernel( n, depthTexture, UV );
+	makeKernel( n, depthTexture, UV );
 
 	vec4 sobel_edge_h = n[2] + (2.0*n[5]) + n[8] - (n[0] + (2.0*n[3]) + n[6]);
   	vec4 sobel_edge_v = n[0] + (2.0*n[1]) + n[2] - (n[6] + (2.0*n[7]) + n[8]);

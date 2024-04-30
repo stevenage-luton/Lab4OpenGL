@@ -38,18 +38,18 @@ uniform struct FogInfo{
 }Fog;
 
 
-float ggxDistribution(float nDotH) {
+float distributionGGX(float nDotH) {
     float alpha2= Material.Roughness * Material.Roughness * Material.Roughness * Material.Roughness;
     float d = (nDotH * nDotH) * (alpha2 - 1) + 1;
     return alpha2 / (PI * d * d);
 
 }
 
-float geomSmith(float dot){
+float geometrySmith(float dot){
     float k = (Material.Roughness + 1.0) * (Material.Roughness + 1.0) / 8.0;
-    float denom = dot * (1-k) + k;
+    float denominator = dot * (1-k) + k;
 
-    return 1.0 / denom;
+    return 1.0 / denominator;
 }
 
 vec3 fresnelSchlick(float lDotH)
@@ -82,7 +82,7 @@ vec3 microFacet(int light, vec3 position, vec3 normal){
    float nDotL = max(dot(normal, l), 0.0);
    float nDotV = dot(normal, v);
 
-   vec3 specular = 0.25 * ggxDistribution(nDotH) * fresnelSchlick(lDotH) * geomSmith(nDotL) * geomSmith(nDotV);
+   vec3 specular = 0.25 * distributionGGX(nDotH) * fresnelSchlick(lDotH) * geometrySmith(nDotL) * geometrySmith(nDotV);
 
    return (diffuse + PI * specular) * lightL * nDotL;
 
