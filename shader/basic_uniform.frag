@@ -4,13 +4,15 @@ in vec3 Position;
 in vec3 Normal;
 in vec2 TexCoord;
 
-layout (binding = 0) uniform sampler2D Texture;
-layout (binding = 1) uniform sampler2D Overlay;
+layout (binding = 4) uniform sampler2D Texture;
+layout (binding = 5) uniform sampler2D Overlay;
 layout (location = 0) out vec4 FragColor;
 
 uniform float Gamma = 1.4;
 
 uniform bool OverlayToggle;
+
+const float PI = 3.14159265359;
 
 uniform struct LightInfo{
     vec4 Position;
@@ -23,10 +25,8 @@ uniform struct LightInfo{
 }Lights [17];
 
 uniform struct MaterialInfo{
-    vec3 Kd;
-    vec3 Ka;
-    vec3 Ks;
-    float Shininess;
+    float Roughness;
+    bool Metallic;
 
 }Material;
 
@@ -38,43 +38,56 @@ uniform struct FogInfo{
 }Fog;
 
 
-vec3 blinnPhong(int light, vec3 position, vec3 normal){
-    //Variables
-    vec3 diffuse = vec3(0), specular = vec3(0);
-    vec4 baseColour = texture(Texture,TexCoord);
-    vec4 overlayColour = texture(Overlay,TexCoord);
-    vec3 texColour = mix(baseColour.rgb, overlayColour.rgb, overlayColour.a);
-    //Ambient Light
-    vec3 ambient = Lights[light].La*texColour;
+float ggxDistribution(float nDotH) {
+    float alpha2= Material.Roughness * Material.Roughness * Material.Roughness * Material.Roughness;
+    float d = (nDotH * nDotH) * (alpha2 - 1) + 1;
+    return alpha2 / (PI * d * d);
 
-    //Diffuse
-    vec3 lightToVertex = normalize(Lights[light].Position.xyz - position);
+}
 
-    float cosine = dot(-lightToVertex,normalize(Lights[light].Direction));
-    float angle = acos(cosine);
+float geomSmith(float dot){
+    float k = (Material.Roughness + 1.0) * (Material.Roughness + 1.0) / 8.0;
+    float denom = dot * (1-k) + k;
 
-    float spotScale;
+    return 1.0 / denom;
+}
 
-    if  (angle>=0.0&&angle<Lights[light].Cutoff){
-        spotScale = pow(cosine, Lights[light].Exponent);
-        float dotProduct = max(dot(lightToVertex, normal),0.0);
-        diffuse = texColour*dotProduct;
-
-        if (dotProduct > 0.0){
-            vec3 v = normalize(-position.xyz);
-            vec3 h = normalize(v + lightToVertex);
-            specular = Material.Ks*pow(max(dot(h,normal),0.0),Material.Shininess);
-    
-        }
+vec3 fresnelSchlick(float lDotH)
+{
+    vec3 F0 = vec3(0.04);
+    if  (Material.Metallic){
+        F0 = texture(Texture,TexCoord).rgb;
     }
 
-    
+    return F0 + (1.0 - F0) * pow(1.0 - lDotH, 5);
+}  
+
+vec3 microFacet(int light, vec3 position, vec3 normal){
+    vec3 diffuse = vec3(0);
+    if  (!Material.Metallic){
+        diffuse = texture(Texture,TexCoord).rgb;
+    }
+    vec3 l = vec3(0.0), lightL = Lights[light].L;
+
+   l = Lights[light].Position.xyz - position;
+   float dist = length(l);
+   l = normalize(l);
+   lightL /= (dist * dist);
 
 
-    //calculate Phong
+   vec3 v = normalize(-position);
+   vec3 h = normalize(v + l);
+   float nDotH = dot(normal,h);
+   float lDotH = dot(l, h);
+   float nDotL = max(dot(normal, l), 0.0);
+   float nDotV = dot(normal, v);
 
-    return ambient + spotScale*(diffuse + specular)*Lights[light].L;
+   vec3 specular = 0.25 * ggxDistribution(nDotH) * fresnelSchlick(lDotH) * geomSmith(nDotL) * geomSmith(nDotV);
+
+   return (diffuse + PI * specular) * lightL * nDotL;
+
 }
+
 
 
 
@@ -85,7 +98,9 @@ void main() {
     float fogFactor = (Fog.MaxDistance-dist)/(Fog.MaxDistance-Fog.MinDistance);
     fogFactor = clamp (fogFactor, 0.0, 1.0);
 
-    vec3 shadeColour;
+    vec3 shadeColour = vec3(0);
+
+    vec3 normalizedNormal = normalize(Normal);
 
     for (int i=0;i<17;i++){
         if(alphaMap.a<0.15f){
@@ -93,10 +108,10 @@ void main() {
     }
     else{
         if (gl_FrontFacing){
-            shadeColour +=blinnPhong(i,Position, normalize(Normal));
+            shadeColour += microFacet(i, Position, normalizedNormal);
         }
         else{
-            shadeColour +=blinnPhong(i,Position, normalize(-Normal));
+            shadeColour += microFacet(i, Position, normalizedNormal);
         }
     }
         

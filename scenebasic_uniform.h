@@ -59,7 +59,7 @@ private:
 
     GLuint rustTex, roadTex, PavementTex, ShopTex, LampTex;
 
-    GLuint fsQuad, renderTex,intermediateTex,renderFBO, intermediateFBO;
+    GLuint fsQuad, renderTex,intermediateTex,renderFBO, intermediateFBO, depthTex;
 
     float rotationSpeed;
 

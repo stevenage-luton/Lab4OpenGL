@@ -128,7 +128,7 @@ void SceneBasic_Uniform::initScene()
 
         Cutoff << "Lights[" << i << "].Cutoff";
 
-        prog.setUniform(LightVal.str().c_str(), vec3(1.9f, 1.9f, 1.9f));
+        prog.setUniform(LightVal.str().c_str(), vec3(5.9f, 5.9f, 1.9f));
         prog.setUniform(Exponent.str().c_str(), 75.0f);
         prog.setUniform(Cutoff.str().c_str(), glm::radians(40.0f));
     }
@@ -152,10 +152,13 @@ void SceneBasic_Uniform::initScene()
     ShopTex = Texture::loadTexture("media/texture/ShopTex.png");
     LampTex = Texture::loadTexture("media/texture/Lamp.png");
 
-    /*glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, rustTex);*/
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, rustTex);
 
     setupFBO();
+
+    renderTexProg.setUniform("width", width);
+    renderTexProg.setUniform("height", height);
 
     GLfloat verts[] = {
         -1.0f, -1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
@@ -221,11 +224,19 @@ void SceneBasic_Uniform::setupFBO() {
 
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderTex, 0);
 
-    GLuint depthBuf;
-    glGenRenderbuffers(1, &depthBuf);
-    glBindRenderbuffer(GL_RENDERBUFFER, depthBuf);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuf);
+    //GLuint depthBuf;
+    //glGenRenderbuffers(1, &depthBuf);
+    //glBindRenderbuffer(GL_RENDERBUFFER, depthBuf);
+    //glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+    //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuf);
+
+    glGenTextures(1, &depthTex);
+    glBindTexture(GL_TEXTURE_2D, depthTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTex, 0);
 
     GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
     glDrawBuffers(1, drawBuffers);
@@ -289,6 +300,8 @@ void SceneBasic_Uniform::setMatrices(GLSLProgram &p) {
     p.setUniform("NormalMatrix", glm::mat3(vec3(mv[0]), vec3(mv[1]), vec3(mv[2])));
 
     p.setUniform("MVP", projection * mv);
+
+    p.setUniform("ModelMatrix", model);
 }
 
 void SceneBasic_Uniform::setCameraRotation(glm::vec3 direction) {
@@ -334,10 +347,9 @@ void SceneBasic_Uniform::setCameraPosition(float x, float y, std::string directi
 void SceneBasic_Uniform::render() {
     glBindFramebuffer(GL_FRAMEBUFFER, renderFBO);
     pass1();
-    glFlush();
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     pass2();
-    glFlush();
 }
 
 void SceneBasic_Uniform::pass1() {
@@ -345,9 +357,11 @@ void SceneBasic_Uniform::pass1() {
 
     glViewport(0, 0, width, height);
 
+    glEnable(GL_DEPTH_TEST);
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
+    prog.use();
     view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
     projection = glm::perspective(glm::radians(70.0f), (float)width / height, 0.3f, 100.0f);
 
@@ -375,19 +389,20 @@ void SceneBasic_Uniform::pass1() {
 
         glm::mat3 normalMatrix = glm::mat3(glm::vec3(view[0]), vec3(view[1]), vec3(view[2]));
 
-        prog.setUniform(name.str().c_str(), view * Position);
+        prog.setUniform(name.str().c_str(), Position);
 
 
-        prog.setUniform(direction.str().c_str(), normalMatrix * vec3(-Direction));
+        prog.setUniform(direction.str().c_str(),vec3(-Direction));
 
 
     }
 
     glm::vec4 redLightPos = glm::vec4(0.0f, 10.0f, 0.0f, 1.0f);
     glm::vec3 Direction = glm::vec3(0.0f, 10.0f, 20.0f * sin(angle));
-    prog.setUniform("Lights[16].Position", view * redLightPos);
+    std::cout << angle;
+    prog.setUniform("Lights[16].Position", redLightPos);
     glm::mat3 normalMatrix = glm::mat3(glm::vec3(view[0]), vec3(view[1]), vec3(view[2]));
-    prog.setUniform("Lights[16].Direction", normalMatrix * vec3(-Direction));
+    prog.setUniform("Lights[16].Direction",  vec3(-Direction));
     //disable depth test and set the view to the normal matrix so the skybox stays far away
     view = normalMatrix;
     glDepthMask(GL_FALSE);
@@ -400,12 +415,10 @@ void SceneBasic_Uniform::pass1() {
     prog.use();
 
 
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, roadTex);
-    prog.setUniform("Material.Kd", vec3(0.5f, 0.5f, 0.5f));
-    prog.setUniform("Material.Ka", vec3(0.02f, 0.02f, 0.02f));
-    prog.setUniform("Material.Ks", vec3(0.0f, 0.0f, 0.0f));
-    prog.setUniform("Material.Shininess", 2000.0f);
+    prog.setUniform("Material.Roughness", 0.9f);
+    prog.setUniform("Material.Metallic", 0);
 
     //float dist = 0.0f;
 
@@ -423,20 +436,24 @@ void SceneBasic_Uniform::pass1() {
     //}
 
 
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, roadTex);
 
     int num = 0;
 
+
+
     for (auto obj : gameObjects)
     {
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, obj.position);
         if (obj.mesh == "Road")
         {
-            glActiveTexture(GL_TEXTURE1);
+            glActiveTexture(GL_TEXTURE4);
             glBindTexture(GL_TEXTURE_2D, roadTex);
+            prog.setUniform("Material.Roughness", 0.9f);
+            prog.setUniform("Material.Metallic", 0);
 
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, obj.position);
 
             setMatrices(prog);
 
@@ -453,8 +470,10 @@ void SceneBasic_Uniform::pass1() {
         }
         else if (obj.mesh == "Pavement")
         {
-            glActiveTexture(GL_TEXTURE1);
+            glActiveTexture(GL_TEXTURE4);
             glBindTexture(GL_TEXTURE_2D, PavementTex);
+            prog.setUniform("Material.Roughness", 0.9f);
+            prog.setUniform("Material.Metallic", 0);
 
             model = glm::mat4(1.0f);
             model = glm::translate(model, obj.position);
@@ -465,8 +484,10 @@ void SceneBasic_Uniform::pass1() {
         }
         else if (obj.mesh == "Wall")
         {
-            glActiveTexture(GL_TEXTURE1);
+            glActiveTexture(GL_TEXTURE4);
             glBindTexture(GL_TEXTURE_2D, ShopTex);
+            prog.setUniform("Material.Roughness", 0.9f);
+            prog.setUniform("Material.Metallic", 0);
 
             model = glm::mat4(1.0f);
             model = glm::translate(model, obj.position);
@@ -477,8 +498,11 @@ void SceneBasic_Uniform::pass1() {
         }
         else if (obj.mesh == "Shops")
         {
-            glActiveTexture(GL_TEXTURE1);
+            glActiveTexture(GL_TEXTURE4);
             glBindTexture(GL_TEXTURE_2D, ShopTex);
+
+            prog.setUniform("Material.Roughness", 0.9f);
+            prog.setUniform("Material.Metallic", 0);
 
             model = glm::mat4(1.0f);
             model = glm::translate(model, obj.position);
@@ -489,8 +513,11 @@ void SceneBasic_Uniform::pass1() {
         }
         else if (obj.mesh == "Side")
         {
-            glActiveTexture(GL_TEXTURE1);
+            glActiveTexture(GL_TEXTURE4);
             glBindTexture(GL_TEXTURE_2D, roadTex);
+
+            prog.setUniform("Material.Roughness", 0.9f);
+            prog.setUniform("Material.Metallic", 0);
 
             model = glm::mat4(1.0f);
             model = glm::translate(model, obj.position);
@@ -501,9 +528,10 @@ void SceneBasic_Uniform::pass1() {
         }
         else if (obj.mesh == "Lamp")
         {
-            glActiveTexture(GL_TEXTURE1);
+            glActiveTexture(GL_TEXTURE4);
             glBindTexture(GL_TEXTURE_2D, LampTex);
-
+            prog.setUniform("Material.Roughness", 0.2f);
+            prog.setUniform("Material.Metallic", 1);
             model = glm::mat4(1.0f);
             model = glm::translate(model, obj.position);
 
@@ -514,6 +542,11 @@ void SceneBasic_Uniform::pass1() {
 
         num++;
     }
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, renderTex);
+    glActiveTexture(GL_TEXTURE6);
+    glBindTexture(GL_TEXTURE_2D, depthTex);
 }
 
 void SceneBasic_Uniform::pass2()
@@ -521,18 +554,18 @@ void SceneBasic_Uniform::pass2()
 
     glViewport(0, 0, width, height);
 
+    glDisable(GL_DEPTH_TEST);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    renderTexProg.use();
 
     model = glm::mat4(1.0f);
     view = glm::mat4(1.0f);
     projection = glm::mat4(1.0f);
 
-    renderTexProg.use();
     model = glm::mat4(1.0f);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, renderTex);
+
+
     setMatrices(renderTexProg);
 
 
@@ -636,6 +669,10 @@ void SceneBasic_Uniform::resize(int w, int h)
 {
     width = w;
     height = h;
+
+    renderTexProg.setUniform("width", width);
+    renderTexProg.setUniform("height", height);
+
     glViewport(0,0,w,h);
     projection = glm::perspective(glm::radians(70.0f), (float)w / h, 0.3f, 100.0f);
 }

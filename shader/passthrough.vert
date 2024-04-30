@@ -9,6 +9,7 @@ out vec3 Position;
 
 out vec3 Vec;
 
+uniform mat4 ModelMatrix;
 uniform mat4 ModelViewMatrix;
 uniform mat3 NormalMatrix;
 uniform mat4 ProjectionMatrix;
